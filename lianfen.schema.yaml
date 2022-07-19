@@ -1,0 +1,140 @@
+# Rime schema
+# encoding: utf-8
+
+schema:
+  schema_id: lianfen
+  name: 上海話兩分
+  version: "2022.07.19"
+  author:
+    - Yuanhao 'Nyoeghau' Chen <nyoeghau@nyoeghau.com>
+  description: |-
+    The Shanghainese version of Liang-Fen (兩分) input method.
+  dependencies:
+    - cangjie5
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [中文, 西文]
+  - name: full_shape
+    reset: 0
+    states: [半角, 全角]
+  - name: extended_charset
+    reset: 1
+    states: [通用, 增廣]
+  - name: ascii_punct
+    reset: 0
+    states: [。，, ．，]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - affix_segmentor@cangjie5
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - script_translator
+    - table_translator@cangjie5
+  filters:
+    - simplifier
+    - uniquifier
+    - reverse_lookup_filter
+
+speller:
+  alphabet: ;zyxwvutsrqponmlkjihgfedcba
+  delimiter: " '"
+  algebra:
+    - xform/'/;/
+
+    - abbrev/^([a-z]).+$/$1/
+    - abbrev/^(([ptsck]|ts)h).+$/$1/
+    - abbrev/^(ts).+$/$1/
+    - abbrev/^(ny).+$/$1/
+    - abbrev/^(ng).+$/$1/
+    - abbrev/^(gh).+$/$1/
+
+    # 新派口音
+    # - derive/(^|-)tsi/$1ci/
+    # - derive/(^|-)tshi/$1chi/
+    # - derive/(^|-)([sz])i/$1$2hi/
+    # - derive/(^|-)zi/$1ji/
+    # - derive/ah($|-)/eh$1/
+    # - derive/eh($|-)/ah$1/
+    # - derive/ioh($|-)/iuih$1/
+    # - derive/iuih($|-)/ioh$1/
+
+    # 中派口音
+    - derive/(?<=[sz])yu($|-)/y$1/
+    - derive/ae($|-)/e$1/ # 模糊“蘭”“雷”
+    - derive/ie($|-)/i$1/ # 模糊“煙”“衣”
+    - derive/aeh($|-)/ah$1/ # 多數中派模糊前後ah
+    - derive/ah($|-)/aeh$1/
+    - derive/aon($|-)/an$1/ # 多數中派模糊前後an
+    - derive/an($|-)/aon$1/
+
+    - derive/(^|-)zaon($|-)/$1laon$2/ # 地上、衣裳
+    - derive/(^|-)zi(?=a)/$1y/ # 謝謝 zia ya; 好像 hau yan
+
+    # 簡寫以及更多易錯模糊
+    - derive/(^|-)ny(?=[aeou])/$1ni/
+    - derive/(^|-)nyi/$1ni/
+    # - derive/(^|-)sh/$1x/
+    # - derive/(^|-)ch/$1q/
+    - derive/ui([nh])($|-)/u$1$2/
+
+    # 兼容吳語學堂
+    # - derive/(^|-)r($|-)/$1er$2/
+    # - abbrev/(^|-)nyi([nh]($|-)|($|-))/$1gni$2/
+    # - abbrev/(^|-)ny(?=[aeou])/$1gni/
+    # - derive/ui([nh]($|-))/u$1/
+    # - derive/h($|-)/q$1/
+
+    - xform/-//
+
+translator:
+  dictionary: lianfen
+  spelling_hints: 20
+
+cangjie5:
+  tag: cangjie5
+  dictionary: cangjie5
+  enable_user_dict: false
+  prefix: "v"
+  suffix: ";"
+  tips: 〔倉頡五代〕
+  preedit_format:
+    - 'xform/^([a-z]*)$/$1	（\U$1\E）/'
+    - "xlit|ABCDEFGHIJKLMNOPQRSTUVWXYZ|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
+  comment_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符～|"
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+    - "^yyy.*$"
+
+reverse_lookup:
+  tags: [ cangjie5 ]
+  overwrite_comment: false
+  dictionary: lianfen
+
+punctuator:
+  import_preset: default
+
+key_binder:
+  import_preset: default
+
+recognizer:
+  import_preset: default
+  patterns:
+    cangjie5: "^v[a-z]*;?$"
